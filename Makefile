@@ -5,6 +5,8 @@ PROJECT_VERSION := f33
 BUILD_DIR := build
 STM32_BUILD_DIR := $(BUILD_DIR)/stm32
 
+# SSDB_TARGET := "TARGET_NONE"
+
 # Cross-compilation tooling
 STM32_PREFIX := arm-none-eabi
 STM32_CC := $(STM32_PREFIX)-gcc
@@ -15,7 +17,7 @@ STM32_OBJCOPY := $(STM32_PREFIX)-objcopy
 STM32_OBJDUMP := $(STM32_PREFIX)-objdump
 
 # Cross-compilation options
-STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -D USE_HAL_DRIVER -D STM32G473xx
+STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -D USE_HAL_DRIVER -D STM32G473xx -D $(SSDB_TARGET)
 STM32_CC_FLAGS := $(STM32_COMMON_FLAGS) -ffreestanding -ffunction-sections -fdata-sections -Wall -Wextra -Werror=implicit-function-declaration -g
 STM32_ASM_FLAGS := $(STM32_CC_FLAGS)
 STM32_LD_SCRIPT := STM32G473RETx_FLASH.ld
@@ -60,7 +62,7 @@ CORE_OBJS :=  $(CORE_SRCS:$(CORE_DIR)/%=$(STM32_BUILD_DIR)/obj/core/%.o)
 
 # Compilation targets
 .PHONY: all
-all: spin_test
+all: check-target spin_test
 
 .PHONY: spin_test
 spin_test: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin
@@ -107,3 +109,9 @@ $(STM32_BUILD_DIR)/obj/core/%.c.o: $(CORE_DIR)/%.c
 .PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
+
+.PHONY: check-target
+check-target:
+ifndef SSDB_TARGET
+	$(error You must run make with either SSDB_TARGET=TARGET_REAR or SSDB_TARGET=TARGET_FRONT)
+endif

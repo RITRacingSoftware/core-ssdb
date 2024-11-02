@@ -3,11 +3,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "can.h"
+#include "CAN/driver_can.h"
 #include "clock.h"
 #include "gpio.h"
-#include "i2c.h"
-#include "spi.h"
 #include "error_handler.h"
 
 #include "FreeRTOS.h"
@@ -33,6 +31,7 @@ int main(void) {
     core_GPIO_set_heartbeat(GPIO_PIN_RESET);
 
     if (!core_clock_init()) error_handler();
+    if (!CAN_init()) error_handler();
 
     int err = xTaskCreate(heartbeat_task,
         "heartbeat",
