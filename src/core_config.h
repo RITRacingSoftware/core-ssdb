@@ -15,7 +15,7 @@
 #define CORE_CAN_BITRATE 1000000
 
 // Number of CAN messages that can be stored in the CAN FreeRTOS queue
-#define CORE_CAN_QUEUE_LENGTH 15
+#define CORE_CAN_QUEUE_LENGTH 32
 
 // Ports and pins for CAN communication
 #define CORE_FDCAN1_TX_PORT GPIOA
@@ -53,7 +53,7 @@
 #define CORE_FDCAN3_AUTO_RETRANSMISSION 0
 
 // CAN FD config
-#define CORE_FDCAN1_USE_FD 0
+#define CORE_FDCAN1_USE_FD 1
 #define CORE_FDCAN2_USE_FD 0
 #define CORE_FDCAN3_USE_FD 0
 
