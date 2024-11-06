@@ -20,7 +20,7 @@ bool SSDB_rear_init() {
     core_ADC_init(ADC2);
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
-    core_USART_init(USART3, 500000);
+    core_USART_init(USART3, 921600);
     core_USART_start_rx(USART3, imubuf, &imubuflen);
     return true;
 }
@@ -55,8 +55,8 @@ void SSDB_rear_collect_sensors() {
             data_imu.vector_nav_vel_ned_n = parsed_imu_data.VelNedN;
             data_imu.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
             data_imu.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;
-            dlc = formula_sensor_dbc_vector_nav_pack(can_imubuf, &data_imu, 64);
-            CAN_sensor_transmit_extended(FORMULA_SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, can_imubuf);
+            dlc = formula_sensor_dbc_vector_nav_pack(&can_imubuf, &data_imu, 64);
+            CAN_sensor_transmit_extended(FORMULA_SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, &can_imubuf);
         }
         imubuflen = 0;
         core_USART_update_enable(USART3);
