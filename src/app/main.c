@@ -4,13 +4,15 @@
 #include <stdio.h>
 
 #include "can.h"
+#include "FrontSSDB/driver_front.h"
+#include "RearSSDB/driver_rear.h"
+#include "ssdb_config.h"
 #include "clock.h"
 #include "gpio.h"
-#include "i2c.h"
-#include "spi.h"
 #include "error_handler.h"
+#include "formula_sensor_dbc.h"
 
-#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
 #include "queue.h"
 #include "task.h"
 
@@ -25,19 +27,79 @@ void heartbeat_task(void *pvParameters) {
     }
 }
 
+void collect_sensors_task(void *pvParameters) {
+    (void) pvParameters;
+    while (true) {
+#ifdef TARGET_REAR
+        SSDB_rear_collect_sensors();
+        vTaskDelay(SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
+#endif
+#ifdef TARGET_FRONT
+        SSDB_front_collect_sensors();
+        vTaskDelay(SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
+#endif
+    }
+}
+
+void transmit_sensor_task(void *pvParameters) {
+    (void) pvParameters;
+    CAN_sensor_transmit_task();
+    error_handler();
+}
+
+void transmit_main_task(void *pvParameters) {
+    (void) pvParameters;
+    CAN_main_transmit_task();
+    error_handler();
+}
+
 int main(void) {
     HAL_Init();
 
     // Drivers
-    core_heartbeat_init(GPIOB, GPIO_PIN_9);
+    core_heartbeat_init(GPIOB, GPIO_PIN_15);
     core_GPIO_set_heartbeat(GPIO_PIN_RESET);
 
     if (!core_clock_init()) error_handler();
+    if (!CAN_init()) error_handler();
+#ifdef TARGET_REAR
+    if (!SSDB_rear_init()) error_handler();
+#endif
+#ifdef TARGET_FRONT
+    if (!SSDB_front_init()) error_handler();
+#endif
 
     int err = xTaskCreate(heartbeat_task,
         "heartbeat",
         1000,
         NULL,a
+        4,
+        NULL);
+    if (err != pdPASS) {
+        error_handler();
+    }
+    err = xTaskCreate(collect_sensors_task,
+        "collect_sensors",
+        1000,
+        NULL,
+        4,
+        NULL);
+    if (err != pdPASS) {
+        error_handler();
+    }
+    err = xTaskCreate(transmit_sensor_task,
+        "tx_sensor",
+        1000,
+        NULL,
+        4,
+        NULL);
+    if (err != pdPASS) {
+        error_handler();
+    }
+    err = xTaskCreate(transmit_main_task,
+        "tx_main",
+        1000,
+        NULL,
         4,
         NULL);
     if (err != pdPASS) {
