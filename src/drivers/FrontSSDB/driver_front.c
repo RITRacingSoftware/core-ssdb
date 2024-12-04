@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 #include "driver_front.h"
-#include "CAN/driver_can.h"
+#include "can.h"
 #include "ssdb_config.h"
 #include "adc.h"
 
