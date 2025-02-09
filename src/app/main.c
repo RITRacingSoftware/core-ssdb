@@ -9,6 +9,7 @@
 #include "ssdb_config.h"
 #include "clock.h"
 #include "gpio.h"
+#include "boot.h"
 #include "error_handler.h"
 #include "formula_sensor_dbc.h"
 
@@ -29,39 +30,30 @@ void heartbeat_task(void *pvParameters) {
 
 void collect_sensors_task(void *pvParameters) {
     (void) pvParameters;
+    TickType_t nextWakeTime = xTaskGetTickCount();
+
     while (true) {
 #ifdef TARGET_REAR
         SSDB_rear_collect_sensors();
-        vTaskDelay(SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
+        vTaskDelayUntil(&nextWakeTime, SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
 #endif
 #ifdef TARGET_FRONT
         SSDB_front_collect_sensors();
-        vTaskDelay(SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
+        vTaskDelayUntil(&nextWakeTime, SSDB_FRONT_LOOP_DELAY * portTICK_PERIOD_MS);
 #endif
     }
-}
-
-void transmit_sensor_task(void *pvParameters) {
-    (void) pvParameters;
-    CAN_sensor_transmit_task();
-    error_handler();
-}
-
-void transmit_main_task(void *pvParameters) {
-    (void) pvParameters;
-    CAN_main_transmit_task();
-    error_handler();
 }
 
 int main(void) {
     HAL_Init();
 
     // Drivers
-    core_heartbeat_init(GPIOB, GPIO_PIN_15);
+    core_heartbeat_init(GPIOC, GPIO_PIN_8);
     core_GPIO_set_heartbeat(GPIO_PIN_RESET);
 
     if (!core_clock_init()) error_handler();
     if (!CAN_init()) error_handler();
+    core_boot_init();
 #ifdef TARGET_REAR
     if (!SSDB_rear_init()) error_handler();
 #endif
@@ -80,24 +72,6 @@ int main(void) {
     }
     err = xTaskCreate(collect_sensors_task,
         "collect_sensors",
-        1000,
-        NULL,
-        4,
-        NULL);
-    if (err != pdPASS) {
-        error_handler();
-    }
-    err = xTaskCreate(transmit_sensor_task,
-        "tx_sensor",
-        1000,
-        NULL,
-        4,
-        NULL);
-    if (err != pdPASS) {
-        error_handler();
-    }
-    err = xTaskCreate(transmit_main_task,
-        "tx_main",
         1000,
         NULL,
         4,

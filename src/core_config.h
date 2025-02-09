@@ -15,7 +15,10 @@
 #define CORE_CAN_BITRATE 1000000
 
 // Number of CAN messages that can be stored in the CAN FreeRTOS queue
-#define CORE_CAN_QUEUE_LENGTH 32
+#define CORE_CAN_DISABLE_TX_QUEUE
+#define CORE_CAN_QUEUE_LENGTH 16
+
+#define CORE_CAN_RX_TIMEOUT 100
 
 // Ports and pins for CAN communication
 #define CORE_FDCAN1_TX_PORT GPIOA
@@ -54,7 +57,7 @@
 
 // CAN FD config
 #define CORE_FDCAN1_USE_FD 1
-#define CORE_FDCAN2_USE_FD 0
+#define CORE_FDCAN2_USE_FD 1
 #define CORE_FDCAN3_USE_FD 0
 
 /*** SPI CONFIG PARAMETERS ***/
@@ -111,5 +114,14 @@
 #define CORE_USART2_PINS (GPIO_PIN_3 | GPIO_PIN_2)
 #define CORE_USART3_PORT GPIOC
 #define CORE_USART3_PINS (GPIO_PIN_10 | GPIO_PIN_11)
+
+
+/*** RTC CONFIG PARAMETERS ***/
+#define CORE_RTC_CENTURY 2000
+
+/*** BOOTLOADER CONFIG ***/
+#define CORE_BOOT_FDCAN FDCAN2
+#define CORE_BOOT_FDCAN_ID 0x004
+#define CORE_BOOT_FDCAN_MASTER_ID 0x084
 
 #endif //CORE_CORE_CONFIG_H

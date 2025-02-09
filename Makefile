@@ -21,7 +21,7 @@ STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -D USE_
 STM32_CC_FLAGS := $(STM32_COMMON_FLAGS) -ffreestanding -ffunction-sections -fdata-sections -Wall -Wextra -Werror=implicit-function-declaration -g
 STM32_ASM_FLAGS := $(STM32_CC_FLAGS)
 STM32_LD_SCRIPT := STM32G473RETx_FLASH.ld
-STM32_LD_FLAGS := $(STM32_COMMON_FLAGS) -static -Wl,--gc-sections -T $(STM32_LD_SCRIPT)
+STM32_LD_FLAGS := $(STM32_COMMON_FLAGS) -static -Wl,--gc-sections -T $(STM32_LD_SCRIPT) -specs=nano.specs -specs=nosys.specs
 
 
 # Sources
@@ -41,10 +41,12 @@ STM32CUBE_HAL_DIR := $(STM32CUBE_DIR)/Drivers/STM32G4xx_HAL_Driver
 STM32CUBE_CMSIS_DIR := $(STM32CUBE_DIR)/Drivers/CMSIS/Device/ST/STM32G4xx
 STM32CUBE_SRC_DIRS := $(STM32CUBE_HAL_DIR)/Src
 STM32CUBE_SRCS := $(shell find $(STM32CUBE_SRC_DIRS) -maxdepth 1 -type f -name "*.c") $(STM32CUBE_CMSIS_DIR)/Source/Templates/system_stm32g4xx.c
-STM32CUBE_ASMS := $(STM32CUBE_CMSIS_DIR)/Source/Templates/gcc/startup_stm32g473xx.s
+#STM32CUBE_ASMS := $(STM32CUBE_CMSIS_DIR)/Source/Templates/gcc/startup_stm32g473xx.s
+STM32CUBE_ASMS := src/startup_stm32g473xx.s
 STM32CUBE_INCLUDES := $(STM32CUBE_HAL_DIR)/Inc $(STM32CUBE_DIR)/Drivers/CMSIS/Include $(STM32CUBE_CMSIS_DIR)/Include
 STM32CUBE_INCLUDES := $(foreach d, $(STM32CUBE_INCLUDES),-I $d)
-STM32CUBE_OBJS := $(STM32CUBE_SRCS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o) $(STM32CUBE_ASMS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o)
+#STM32CUBE_OBJS := $(STM32CUBE_SRCS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o) $(STM32CUBE_ASMS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o)
+STM32CUBE_OBJS := $(STM32CUBE_SRCS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o) $(STM32_BUILD_DIR)/obj/stm32cube/startup_stm32g473xx.s.o
 
 FREERTOS_DIR := lib/FreeRTOS-Kernel
 FREERTOS_SRC_DIRS := $(FREERTOS_DIR) $(FREERTOS_DIR)/portable/GCC/ARM_CM4F
@@ -64,20 +66,25 @@ DBC_SRCS := $(shell find -L $(DBC_DIR)/c_files -name "*.c")
 DBC_INCLUDES := -I $(DBC_DIR)/c_files
 DBC_OBJS := $(DBC_SRCS:$(DBC_DIR)/c_files/%=$(STM32_BUILD_DIR)/obj/formula_dbc/%.o)
 
+OUTNAME := $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION)
 
 # Compilation targets
 .PHONY: all
 all: check-target spin_test
 
 .PHONY: spin_test
-spin_test: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin
+spin_test: $(OUTNAME).elf $(OUTNAME).bin $(OUTNAME).ihex
 
 # Main executable
-$(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf
+$(OUTNAME).bin: $(OUTNAME).elf
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(STM32_OBJCOPY) -O binary $< $@
 
-$(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf: $(STM32_APP_OBJS) $(STM32_DRIVER_OBJS) $(STM32CUBE_OBJS) $(FREERTOS_OBJS) $(CORE_OBJS) $(DBC_OBJS)
+$(OUTNAME).ihex: $(OUTNAME).elf
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	$(STM32_OBJCOPY) -O ihex $< $@
+
+$(OUTNAME).elf: $(STM32_APP_OBJS) $(STM32_DRIVER_OBJS) $(STM32CUBE_OBJS) $(FREERTOS_OBJS) $(CORE_OBJS) $(DBC_OBJS)
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(STM32_LD) $(STM32_LD_FLAGS) $^ -o $@
 
@@ -96,7 +103,7 @@ $(STM32_BUILD_DIR)/obj/stm32cube/%.c.o: $(STM32CUBE_DIR)/%.c
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(STM32_CC) $(STM32_CC_FLAGS) -I src $(STM32CUBE_INCLUDES) -c $< -o $@
 
-$(STM32_BUILD_DIR)/obj/stm32cube/%.s.o: $(STM32CUBE_DIR)/%.s
+$(STM32_BUILD_DIR)/obj/stm32cube/startup_stm32g473xx.s.o: src/startup_stm32g473xx.s
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(STM32_CC) $(STM32_ASM_FLAGS) -c $< -o $@
 
@@ -120,6 +127,11 @@ $(STM32_BUILD_DIR)/obj/formula_dbc/%.c.o: $(DBC_DIR)/c_files/%.c
 .PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
+
+.PHONY: clean-user
+clean-user:
+	rm -r $(BUILD_DIR)/stm32/obj/app
+	rm -r $(BUILD_DIR)/stm32/obj/core
 
 .PHONY: check-target
 check-target:
