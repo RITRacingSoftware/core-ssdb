@@ -11,7 +11,7 @@
 #include "gpio.h"
 #include "boot.h"
 #include "error_handler.h"
-#include "formula_sensor_dbc.h"
+#include "sensor_dbc.h"
 
 #include "FreeRTOS.h"
 #include "queue.h"

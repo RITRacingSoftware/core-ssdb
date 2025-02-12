@@ -8,14 +8,18 @@
 #include "adc.h"
 #include "usart.h"
 
-#include "formula_sensor_dbc.h"
-#include "formula_main_dbc.h"
+#include "sensor_dbc.h"
+#include "main_dbc.h"
 
 static uint8_t can_imubuf[64];
 static uint32_t imubuflen = 0;
 static imu_result_t parsed_imu_data;
-static struct formula_sensor_dbc_vector_nav_t data_imu;
-static struct formula_main_dbc_vector_nav6_t data_imu_velocity;
+static struct sensor_dbc_vector_nav_t data_imu;
+static struct main_dbc_ssdb_vector_nav6_t data_imu_velocity;
+
+static struct sensor_dbc_ssdb_suspension_rear_t data_suspension;
+static uint64_t can_data;
+static uint8_t dlc;
 
 #define WAIT_TX(can) while ((can->PSR & 0x18) == 0x18)
 
@@ -37,12 +41,12 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
 
         data_imu_velocity.vector_nav_vel_ned_n = parsed_imu_data.VelNedN;
         data_imu_velocity.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
-        dlc = formula_main_dbc_vector_nav6_pack(&can_imubuf, &data_imu_velocity, 8);
-        WAIT_TX(CAN_SENSOR);
-        CAN_sensor_transmit(FORMULA_MAIN_DBC_VECTOR_NAV6_FRAME_ID, dlc, &can_imubuf);
+        dlc = main_dbc_ssdb_vector_nav6_pack(&can_imubuf, &data_imu_velocity, 8);
+        WAIT_TX(CAN_MAIN);
+        CAN_main_transmit(MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID, dlc, &can_imubuf);
 
-        /*dlc = formula_sensor_dbc_vector_nav_pack(&can_imubuf, &data_imu, 64);
-        CAN_sensor_transmit_extended(FORMULA_SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, &can_imubuf);*/
+        /*dlc = sensor_dbc_vector_nav_pack(&can_imubuf, &data_imu, 64);
+        CAN_sensor_transmit_extended(SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, &can_imubuf);*/
 
     }
 }
@@ -62,13 +66,8 @@ void SSDB_rear_collect_sensors() {
     uint64_t data = 0x0000;
     uint8_t dlc = 2;
 
-    struct formula_sensor_dbc_ssdb_suspension_rl_m_t data_rl;
-    core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_rl.ssdb_suspension_rl));
-    dlc = formula_sensor_dbc_ssdb_suspension_rl_m_pack((uint8_t*)(&data), &data_rl, 8);
-    CAN_sensor_transmit(FORMULA_SENSOR_DBC_SSDB_SUSPENSION_RL_M_FRAME_ID, dlc, data);
-
-    struct formula_sensor_dbc_ssdb_suspension_rr_m_t data_rr;
-    core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_rr.ssdb_suspension_rr));
-    dlc = formula_sensor_dbc_ssdb_suspension_rr_m_pack((uint8_t*)(&data), &data_rr, 8);
-    CAN_sensor_transmit(FORMULA_SENSOR_DBC_SSDB_SUSPENSION_RR_M_FRAME_ID, dlc, data);
+    core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_suspension.ssdb_suspension_rl));
+    core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr));
+    dlc = sensor_dbc_ssdb_suspension_rear_pack((uint8_t*)(&can_data), &data_suspension, 8);
+    CAN_sensor_transmit(SENSOR_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
 }
