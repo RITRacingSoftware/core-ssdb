@@ -40,11 +40,11 @@ void collect_sensors_task(void *pvParameters) {
     while (true) {
 #ifdef TARGET_REAR
         SSDB_rear_collect_sensors();
-        vTaskDelayUntil(&nextWakeTime, SSDB_REAR_LOOP_DELAY * portTICK_PERIOD_MS);
+        vTaskDelayUntil(&nextWakeTime, pdMS_TO_TICKS(SSDB_REAR_LOOP_DELAY));
 #endif
 #ifdef TARGET_FRONT
         SSDB_front_collect_sensors();
-        vTaskDelayUntil(&nextWakeTime, SSDB_FRONT_LOOP_DELAY * portTICK_PERIOD_MS);
+        vTaskDelayUntil(&nextWakeTime, pdMS_TO_TICKS(SSDB_FRONT_LOOP_DELAY));
 #endif
     }
 }

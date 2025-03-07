@@ -2,6 +2,6 @@
 
 set -x
 
-ELF=build/stm32/spin_test-f33.elf
+ELF=$1
 
 openocd -f ./openocd.cfg -c "program ${ELF} verify reset" -c "exit"

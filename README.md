@@ -1,14 +1,21 @@
-# STM32G4xx Project Template
+# Core SSDB source code
 
-## Overview
-This is a Github template with everything needed to make a new STM32G4xx project from scratch.
-This is not meant to be edited with production code.
-To use it, go to the Github website view of this repository, and in the top right corner, 
-create a clone of this template with the "Use This Template" button.
+This repository contains the source code for the front and rear SSDBs on F33
 
-## Requirements
-### Windows-Specific:
-- [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install)
-- [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
+## Compiling
+The driver directories `FrontSSDB` and `RearSSDB` each contain a function for
+initializing the inputs to the SSDB and a function for collecting inputs and 
+transmitting them over CAN. Which set of functions is used in the main code is
+determined by the `SSDB_TARGET` preprocessor macro, which is set either to 
+`TARGET_REAR` or `TARGET_FRONT`. When compiling the code, `make` must be run 
+with either `SSDB_TARGET=TARGET_REAR` or `SSDB_TARGET=TARGET_FRONT` as the 
+argument. Once the code for one SSDB has been compiled, one must run
+`make clean` before compiling the code for the other.
 
-Not strictly required, but advised, is Github Desktop.
+## Theory of operation
+The main application code in main.c creates two tasks: a `heartbeat` task that
+blinks the LED and a `collect_sensors` task that calls the corresponding
+function for collecting sensor data in either driver\_rear.c or 
+driver\_front.c at a regular interval. The interval at which sensor data is
+collected is defined by `SSDB_REAR_LOOP_DELAY` and `SSDB_REAR_LOOP_DELAY` in
+ssdb\_config.h

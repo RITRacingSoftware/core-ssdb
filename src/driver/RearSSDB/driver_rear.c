@@ -29,7 +29,7 @@ static uint8_t dlc;
 
 void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
     uint8_t dlc = 2;
-    if (imu_parse(rxbuf, &parsed_imu_data)) {
+    if (imu_parse(rxbuf, rxbuflen, &parsed_imu_data)) {
         /*data_imu.vector_nav_accel_x = parsed_imu_data.AccelX;
         data_imu.vector_nav_accel_y = parsed_imu_data.AccelY;
         data_imu.vector_nav_accel_z = parsed_imu_data.AccelZ;

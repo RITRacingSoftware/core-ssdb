@@ -56,6 +56,6 @@ typedef struct imu_result_s {
     // attitude data
 } imu_result_t;
 
-bool imu_parse(uint8_t *buf, imu_result_t *data);
+bool imu_parse(uint8_t *buf, uint16_t buflen, imu_result_t *data);
 
 #endif

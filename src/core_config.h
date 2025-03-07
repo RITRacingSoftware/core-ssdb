@@ -11,7 +11,7 @@
 
 /*** CLOCK CONFIG PARAMETERS ***/
 
-#define CORE_CLOCK_USE_HSE
+#define CORE_CLOCK_USE_HSE 1
 #define CORE_CLOCK_HSE_FREQ 25000
 #define CORE_CLOCK_SYSCLK_FREQ 160000
 #define CORE_CLOCK_HSI_FREQ 16000
@@ -23,7 +23,7 @@
 #define CORE_CAN_BITRATE 1000000
 
 // Number of CAN messages that can be stored in the CAN FreeRTOS queue
-#define CORE_CAN_DISABLE_TX_QUEUE
+#define CORE_CAN_DISABLE_TX_QUEUE 1
 #define CORE_CAN_QUEUE_LENGTH 16
 
 #define CORE_CAN_RX_TIMEOUT 100
@@ -78,6 +78,8 @@
 #define CORE_SPI1_MOSI_PORT GPIOA
 #define CORE_SPI1_MOSI_PIN  GPIO_PIN_7
 #define CORE_SPI1_MOSI_AF   5
+#define CORE_SPI1_DIVIDER   7
+#define CORE_SPI1_DATA_SIZE 8
 
 #define CORE_SPI2_SCK_PORT  GPIOB
 #define CORE_SPI2_SCK_PIN   GPIO_PIN_13
@@ -88,6 +90,8 @@
 #define CORE_SPI2_MOSI_PORT GPIOB
 #define CORE_SPI2_MOSI_PIN  GPIO_PIN_15
 #define CORE_SPI2_MOSI_AF   5
+#define CORE_SPI2_DIVIDER   7
+#define CORE_SPI2_DATA_SIZE 8
 
 #define CORE_SPI3_SCK_PORT  GPIOC
 #define CORE_SPI3_SCK_PIN   GPIO_PIN_10
@@ -98,6 +102,8 @@
 #define CORE_SPI3_MOSI_PORT GPIOC
 #define CORE_SPI3_MOSI_PIN  GPIO_PIN_12
 #define CORE_SPI3_MOSI_AF   6
+#define CORE_SPI3_DIVIDER   7
+#define CORE_SPI3_DATA_SIZE 8
 
 #define CORE_SPI4_SCK_PORT  GPIOE
 #define CORE_SPI4_SCK_PIN   GPIO_PIN_12
@@ -108,6 +114,8 @@
 #define CORE_SPI4_MOSI_PORT GPIOE
 #define CORE_SPI4_MOSI_PIN  GPIO_PIN_14
 #define CORE_SPI4_MOSI_AF   5
+#define CORE_SPI4_DIVIDER   7
+#define CORE_SPI4_DATA_SIZE 8
 
 
 /*** USART CONFIG PARAMETERS ***/
@@ -138,5 +146,9 @@
 #define CORE_BOOT_FDCAN_MASTER_ID 0x082
 #endif
 #define CORE_BOOT_FDCAN_BROADCAST_ID 0x7ff
+
+/********************* TIMEOUT PARAMETERS **********************/
+/***************************************************************/
+#define CORE_TIMEOUT_NUM 0
 
 #endif //CORE_CORE_CONFIG_H

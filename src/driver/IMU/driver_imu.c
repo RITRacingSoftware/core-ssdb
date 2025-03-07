@@ -135,7 +135,7 @@
   * <td>Vdop</td><td>float</td><td>-</td><td>Vertical dilution of precision.</td></tr><tr>
   * <td>Hdop</td><td>float</td><td>-</td><td>Horizontal dilution of precision.</td></tr><tr>
   * <td>Ndop</td><td>float</td><td>-</td><td>North dilution of precision.</td></tr><tr>
-  * <td>Edop</td><td>float</td><td>-</td><td>East dilution of precision.</td></tr><tr>
+  * <td>Edop</td><td>float</td><td>-</td><td>East dilution of precision.</td></tr>
   * </table>
   *  - `common`
   *  - `time`
