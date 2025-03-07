@@ -1,3 +1,8 @@
+/**
+  * @file   driver_can.c
+  * @brief  CAN driver functions
+  */
+
 #include "can.h"
 #include "driver_can.h"
 #include "ssdb_config.h"

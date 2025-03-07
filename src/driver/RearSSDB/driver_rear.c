@@ -1,3 +1,7 @@
+/**
+  * @file   driver_rear.c
+  * @brief  Functions for initializing and collecting data on the rear SSDB
+  */
 #include <stdint.h>
 #include <stdbool.h>
 

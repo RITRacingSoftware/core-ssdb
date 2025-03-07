@@ -1,3 +1,8 @@
+/**
+  * @file   main.c
+  * @brief  Main application code
+  */
+
 #include "main.h"
 
 #include <stdbool.h>

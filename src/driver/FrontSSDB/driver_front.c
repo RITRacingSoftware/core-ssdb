@@ -1,3 +1,7 @@
+/**
+  * @file   driver_front.c
+  * @brief  Functions for initializing and collecting data on the front SSDB
+  */
 #include <stdint.h>
 #include <stdbool.h>
 
