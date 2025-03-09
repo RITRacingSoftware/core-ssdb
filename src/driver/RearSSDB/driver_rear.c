@@ -27,6 +27,15 @@ static uint8_t dlc;
 
 #define WAIT_TX(can) while ((can->PSR & 0x18) == 0x18)
 
+/**
+  * @brief  VectorNAV UART receive timeout callback
+  *
+  * This function is called by the core library whenever a block of data is
+  * received from the VectorNAV.
+  *
+  * @param  rxbuf Pointer to the location where the received data is stored
+  * @param  rxbuflen Number of bytes received
+  */
 void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
     uint8_t dlc = 2;
     if (imu_parse(rxbuf, rxbuflen, &parsed_imu_data)) {
@@ -55,6 +64,11 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
     }
 }
 
+/**
+  * @brief  Initialize the peripherals required for the rear SSDB
+  * @retval 1 if initialization succeeded
+  * @retval 0 otherwise
+  */
 bool SSDB_rear_init() {
     core_ADC_init(ADC1);
     core_ADC_init(ADC2);
@@ -66,6 +80,9 @@ bool SSDB_rear_init() {
     return true;
 }
 
+/**
+  * @brief  Collect sensor data on the rear SSDB and transmit over CAN
+  */
 void SSDB_rear_collect_sensors() {
     uint64_t data = 0x0000;
     uint8_t dlc = 2;

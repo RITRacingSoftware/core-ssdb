@@ -19,3 +19,8 @@ function for collecting sensor data in either driver\_rear.c or
 driver\_front.c at a regular interval. The interval at which sensor data is
 collected is defined by `SSDB_REAR_LOOP_DELAY` and `SSDB_REAR_LOOP_DELAY` in
 ssdb\_config.h
+
+The rear SSDB driver code also initializes a UART for receiving data from the
+VectorNAV. Whenever data is received from the VectorNAV, the core library
+calls SSDB\_USART\_callback(), which processes the received data and transmits
+it over CAN immediately. This ensures low latency for VectorNAV data.

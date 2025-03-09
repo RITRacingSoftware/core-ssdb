@@ -18,6 +18,11 @@ static struct main_dbc_ssdb_front_t data_front;
 static uint64_t can_data;
 static uint8_t dlc;
 
+/**
+  * @brief  Initialize the peripherals required for the front SSDB
+  * @retval 1 if initialization succeeded
+  * @retval 0 otherwise
+  */
 bool SSDB_front_init() {
     core_ADC_init(ADC2);
     core_ADC_setup_pin(SSDB_FRONT_LEFT_PORT, SSDB_FRONT_LEFT_PIN, 1);
@@ -27,6 +32,9 @@ bool SSDB_front_init() {
     return true;
 }
 
+/**
+  * @brief  Collect sensor data on the front SSDB and transmit over CAN
+  */
 void SSDB_front_collect_sensors() {
     core_ADC_read_channel(SSDB_FRONT_LEFT_PORT, SSDB_FRONT_LEFT_PIN, &(data_suspension.ssdb_suspension_fl));
     core_ADC_read_channel(SSDB_FRONT_RIGHT_PORT, SSDB_FRONT_RIGHT_PIN, &(data_suspension.ssdb_suspension_fr));
