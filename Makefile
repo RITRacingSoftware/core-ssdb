@@ -1,12 +1,13 @@
 ifeq ($(SSDB_TARGET), TARGET_REAR)
 PROJECT_NAME := RSSDB
+BUILD_DIR := build_rear
 else ifeq ($(SSDB_TARGET), TARGET_FRONT)
 PROJECT_NAME := FSSDB
+BUILD_DIR := build_front
 endif
 PROJECT_VERSION := f33
 
 # Build info
-BUILD_DIR := build
 STM32_BUILD_DIR := $(BUILD_DIR)/stm32
 
 # SSDB_TARGET := "TARGET_NONE"

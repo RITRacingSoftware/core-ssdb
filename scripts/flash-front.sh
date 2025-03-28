@@ -2,6 +2,6 @@
 
 set -x
 
-ELF=$1
+ELF=build_front/stm32/FSSDB-f33.elf
 
 openocd -f ./openocd.cfg -c "program ${ELF} verify reset" -c "exit"
