@@ -43,16 +43,25 @@ typedef struct imu_result_s {
     uint8_t TimeStatus;
     // GNSS1 data
     uint8_t NumSats1, Gnss1Fix;
-    double Gnss1PosLlaL, Gnss1PosLlaO, Gnss1PosLlaA,
+    /*double Gnss1PosLlaL, Gnss1PosLlaO, Gnss1PosLlaA,
            Gnss1PosEcefX, Gnss1PosEcefY, Gnss1PosEcefZ;
     float Gnss1VelNedN, Gnss1VelNedE, Gnss1VelNedD,
           Gnss1VelEcefX, Gnss1VelEcefY, Gnss1VelEcefZ,
           Gnss1PosUncertaintyN, Gnss1PosUncertaintyE, Gnss1PosUncertaintyD,
           Gnss1VelUncertainty,
-          Gnss1TimeUncertainty;
+          Gnss1TimeUncertainty;*/
+
 
 
     // GNSS2 data
+    uint8_t NumSats2, Gnss2Fix;
+    /*double Gnss1PosLlaL, Gnss1PosLlaO, Gnss1PosLlaA,
+           Gnss1PosEcefX, Gnss1PosEcefY, Gnss1PosEcefZ;
+    float Gnss1VelNedN, Gnss1VelNedE, Gnss1VelNedD,
+          Gnss1VelEcefX, Gnss1VelEcefY, Gnss1VelEcefZ,
+          Gnss1PosUncertaintyN, Gnss1PosUncertaintyE, Gnss1PosUncertaintyD,
+          Gnss1VelUncertainty,
+          Gnss1TimeUncertainty;*/
     // attitude data
 } imu_result_t;
 

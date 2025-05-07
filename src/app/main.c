@@ -29,7 +29,7 @@ void heartbeat_task(void *pvParameters) {
     (void) pvParameters;
     while(true) {
         core_GPIO_toggle_heartbeat();
-        vTaskDelay(100 * portTICK_PERIOD_MS);
+        vTaskDelay(300 * portTICK_PERIOD_MS);
     }
 }
 
@@ -49,6 +49,8 @@ void collect_sensors_task(void *pvParameters) {
     }
 }
 
+void update2(uint8_t *a, uint8_t *b) {a[0] = b[0];}
+
 int main(void) {
     HAL_Init();
 
@@ -66,21 +68,11 @@ int main(void) {
     if (!SSDB_front_init()) error_handler();
 #endif
 
-    int err = xTaskCreate(heartbeat_task,
-        "heartbeat",
-        1000,
-        NULL,
-        4,
-        NULL);
+    int err = xTaskCreate(heartbeat_task, "heartbeat", 1000, NULL, 4, NULL);
     if (err != pdPASS) {
         error_handler();
     }
-    err = xTaskCreate(collect_sensors_task,
-        "collect_sensors",
-        1000,
-        NULL,
-        4,
-        NULL);
+    err = xTaskCreate(collect_sensors_task, "collect_sensors", 1000, NULL, 4, NULL);
     if (err != pdPASS) {
         error_handler();
     }

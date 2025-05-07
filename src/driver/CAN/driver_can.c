@@ -20,8 +20,8 @@
   * @retval 0 otherwise
   */
 bool CAN_init() {
-    if (!core_CAN_init(CAN_SENSOR)) return false;
-    if (!core_CAN_init(CAN_MAIN)) return false;
+    if (!core_CAN_init(CAN_SENSOR, 1000000)) return false;
+    if (!core_CAN_init(CAN_MAIN, 1000000)) return false;
     return true;
 }
 

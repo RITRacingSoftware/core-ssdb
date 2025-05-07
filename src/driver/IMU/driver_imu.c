@@ -153,7 +153,7 @@
 #include <stdbool.h>
 #include "IMU/driver_imu.h"
 
-static const uint32_t imu_group_sizes[] = {0, 0, 12, 0, 0, 11, 0};
+static const uint32_t imu_group_sizes[] = {0, 0, 12, 16, 0, 11, 0};
 
 static const uint32_t imu_offsets[] = {
     // common
@@ -161,10 +161,13 @@ static const uint32_t imu_offsets[] = {
     // imu
     0, MEMBER_OFFSET(UncompMagX), MEMBER_OFFSET(UncompAccelX), MEMBER_OFFSET(UncompGyroX), MEMBER_OFFSET(Temperature), MEMBER_OFFSET(Pressure), MEMBER_OFFSET(DeltaThetaT), MEMBER_OFFSET(DeltaVelX), MEMBER_OFFSET(MagX), MEMBER_OFFSET(AccelX), MEMBER_OFFSET(AngularRateX), MEMBER_OFFSET(SensSat),
     // gnss
+    //MEMBER_OFFSET(TimeUtc), MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats), MEMBER_OFFSET(GnssFix), MEMBER_OFFSET(GnssPosLla), MEMBER_OFFSET(GnssPosEcef), MEMBER_OFFSET(GnssVelNed), MEMBER_OFFSET(GnssVelEcef), MEMBER_OFFSET(GnssPosUncertainty), MEMBER_OFFSET(GnssVelUncertainty), MEMBER_OFFSET(GnssTimeUncertainty), MEMBER_OFFSET(GnssTimeInfo), MEMBER_OFFSET(GnssDop), 0, 0
+    0, MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats1), MEMBER_OFFSET(Gnss1Fix), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // attitude
     // ins
     MEMBER_OFFSET(InsStatus), MEMBER_OFFSET(PosLlaL), MEMBER_OFFSET(PosEcefX), MEMBER_OFFSET(VelBodyX), MEMBER_OFFSET(VelNedN), MEMBER_OFFSET(VelEcefX), MEMBER_OFFSET(MagEcefX), MEMBER_OFFSET(AccelEcefX), MEMBER_OFFSET(LinAccelEcefX), MEMBER_OFFSET(PosU), MEMBER_OFFSET(VelU),
     // gnss2
+    0, MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats2), MEMBER_OFFSET(Gnss2Fix), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 static const uint32_t imu_lengths[] = {
@@ -173,10 +176,12 @@ static const uint32_t imu_lengths[] = {
     // imu
     0, 12, 12, 12, 4, 4, 16, 12, 12, 12, 12, 2,
     // gnss
+    0, 8, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // attitude
     // ins
     2, 24, 24, 12, 12, 12, 12, 12, 12, 4, 4,
     // gnss2
+    0, 8, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 };
 
 /**
