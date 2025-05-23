@@ -59,12 +59,16 @@ static struct sensor_dbc_vector_nav4_t data_imu_msg4;
 static struct sensor_dbc_vector_nav5_t data_imu_msg5;
 static struct sensor_dbc_vector_nav6_t data_imu_msg6;
 static struct sensor_dbc_vector_nav7_t data_imu_msg7;
+static struct sensor_dbc_vector_nav8_t data_imu_msg8;
+static struct sensor_dbc_vector_nav9_t data_imu_msg9;
 
 static struct sensor_dbc_ssdb_suspension_rear_t data_suspension;
 static uint64_t can_data;
 static uint8_t dlc;
 
 #define WAIT_TX(can) while ((can->PSR & 0x18) == 0x18)
+
+uint8_t msg_counter = 0;
 
 /**
   * @brief  VectorNAV UART receive timeout callback
@@ -137,13 +141,29 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         dlc = sensor_dbc_vector_nav6_pack(can_imubuf, &data_imu_msg6, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        // Z accel and X rate to sensor bus
+        // D valocity and Y angle to sensor bus
         data_imu_msg7.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;
-        data_imu_msg7.vector_nav_gnss1_num_sats = parsed_imu_data.NumSats1;
-        data_imu_msg7.vector_nav_gnss2_num_sats = parsed_imu_data.NumSats2;
+        data_imu_msg7.vector_nav_ypr_y = parsed_imu_data.YprY;
         dlc = sensor_dbc_vector_nav7_pack(can_imubuf, &data_imu_msg7, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV7_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        // P and R angles to sensor bus
+        data_imu_msg8.vector_nav_ypr_p = parsed_imu_data.YprP;
+        data_imu_msg8.vector_nav_ypr_r = parsed_imu_data.YprR;
+        dlc = sensor_dbc_vector_nav8_pack(can_imubuf, &data_imu_msg8, 8);
+        WAIT_TX(CAN_SENSOR);
+        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV8_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+
+        if (msg_counter == 0) {
+            // Satellite info is only output every 100ms
+            data_imu_msg9.vector_nav_gnss1_num_sats = parsed_imu_data.NumSats1;
+            data_imu_msg9.vector_nav_gnss2_num_sats = parsed_imu_data.NumSats2;
+            dlc = sensor_dbc_vector_nav9_pack(can_imubuf, &data_imu_msg9, 8);
+            WAIT_TX(CAN_SENSOR);
+            CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV9_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        }
+        msg_counter++;
+        if (msg_counter >= 10) msg_counter = 0;
 
         /*dlc = sensor_dbc_vector_nav_pack(&can_imubuf, &data_imu, 64);
         CAN_sensor_transmit_extended(SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, &can_imubuf);*/
@@ -170,7 +190,7 @@ bool SSDB_rear_init() {
     for (i=0; i < 100000; i++);
     uprintf(USART3, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
     for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,76,2,4,6C,0600,0018,0012,0018*2D\n");
+    uprintf(USART3, "$VNWRG,76,2,4,7C,0600,0018,0002,0012,0018*01\n");
     for (i=0; i < 100000; i++);
     uprintf(USART3, "$VNWNV*57\n");
     for (i=0; i < 100000; i++);

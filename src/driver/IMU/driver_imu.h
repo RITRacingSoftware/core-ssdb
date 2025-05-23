@@ -51,7 +51,8 @@ typedef struct imu_result_s {
           Gnss1VelUncertainty,
           Gnss1TimeUncertainty;*/
 
-
+    // Attitude data
+    float YprY, YprP, YprR;
 
     // GNSS2 data
     uint8_t NumSats2, Gnss2Fix;

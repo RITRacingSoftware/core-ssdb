@@ -153,8 +153,17 @@
 #include <stdbool.h>
 #include "IMU/driver_imu.h"
 
-static const uint32_t imu_group_sizes[] = {0, 0, 12, 16, 0, 11, 0};
+/**
+  * Number of types in each group. Note that some groups will have an unused
+  * bit in the type mask; these bits are included here. The value here must
+  * be equal to the number of entries in imu_offsets and imu_lengths
+  * corresponding to that group.
+  */
+static const uint32_t imu_group_sizes[] = {0, 0, 12, 16, 9, 11, 0};
 
+/**
+  * Offset of each supported type in the imu_result_t struct.
+  */
 static const uint32_t imu_offsets[] = {
     // common
     // time
@@ -164,12 +173,16 @@ static const uint32_t imu_offsets[] = {
     //MEMBER_OFFSET(TimeUtc), MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats), MEMBER_OFFSET(GnssFix), MEMBER_OFFSET(GnssPosLla), MEMBER_OFFSET(GnssPosEcef), MEMBER_OFFSET(GnssVelNed), MEMBER_OFFSET(GnssVelEcef), MEMBER_OFFSET(GnssPosUncertainty), MEMBER_OFFSET(GnssVelUncertainty), MEMBER_OFFSET(GnssTimeUncertainty), MEMBER_OFFSET(GnssTimeInfo), MEMBER_OFFSET(GnssDop), 0, 0
     0, MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats1), MEMBER_OFFSET(Gnss1Fix), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // attitude
+    0, MEMBER_OFFSET(YprY), 0, 0, 0, 0, 0, 0, 0,
     // ins
     MEMBER_OFFSET(InsStatus), MEMBER_OFFSET(PosLlaL), MEMBER_OFFSET(PosEcefX), MEMBER_OFFSET(VelBodyX), MEMBER_OFFSET(VelNedN), MEMBER_OFFSET(VelEcefX), MEMBER_OFFSET(MagEcefX), MEMBER_OFFSET(AccelEcefX), MEMBER_OFFSET(LinAccelEcefX), MEMBER_OFFSET(PosU), MEMBER_OFFSET(VelU),
     // gnss2
     0, MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(NumSats2), MEMBER_OFFSET(Gnss2Fix), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
+/**
+  * Length of each supported type
+  */
 static const uint32_t imu_lengths[] = {
     // common
     // time
@@ -178,6 +191,7 @@ static const uint32_t imu_lengths[] = {
     // gnss
     0, 8, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // attitude
+    0, 12, 0, 0, 0, 0, 0, 0, 0,
     // ins
     2, 24, 24, 12, 12, 12, 12, 12, 12, 4, 4,
     // gnss2
