@@ -60,7 +60,6 @@ static struct sensor_dbc_vector_nav5_t data_imu_msg5;
 static struct sensor_dbc_vector_nav6_t data_imu_msg6;
 static struct sensor_dbc_vector_nav7_t data_imu_msg7;
 static struct sensor_dbc_vector_nav8_t data_imu_msg8;
-static struct sensor_dbc_vector_nav9_t data_imu_msg9;
 
 static struct sensor_dbc_ssdb_suspension_rear_t data_suspension;
 static uint64_t can_data;
@@ -96,8 +95,8 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         data_imu.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;*/
         
         // Velocity data to main bus
-        data_imu_velocity.vector_nav_vel_ned_n = parsed_imu_data.VelNedN;
-        data_imu_velocity.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
+        data_imu_velocity.vector_nav_vel_body_x = parsed_imu_data.VelBodyX;
+        data_imu_velocity.vector_nav_vel_body_y = parsed_imu_data.VelBodyY;
         dlc = main_dbc_ssdb_vector_nav6_pack(can_imubuf, &data_imu_velocity, 8);
         WAIT_TX(CAN_MAIN);
         CAN_main_transmit(MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
@@ -136,13 +135,13 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV5_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
         // Z accel and X rate to sensor bus
-        data_imu_msg6.vector_nav_vel_ned_n = parsed_imu_data.VelNedN;
-        data_imu_msg6.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
+        data_imu_msg6.vector_nav_vel_body_x = parsed_imu_data.VelBodyX;
+        data_imu_msg6.vector_nav_vel_body_y = parsed_imu_data.VelBodyY;
         dlc = sensor_dbc_vector_nav6_pack(can_imubuf, &data_imu_msg6, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
         // D valocity and Y angle to sensor bus
-        data_imu_msg7.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;
+        data_imu_msg7.vector_nav_vel_body_z = parsed_imu_data.VelBodyZ;
         data_imu_msg7.vector_nav_ypr_y = parsed_imu_data.YprY;
         dlc = sensor_dbc_vector_nav7_pack(can_imubuf, &data_imu_msg7, 8);
         WAIT_TX(CAN_SENSOR);
@@ -156,9 +155,9 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
 
         if (msg_counter == 0) {
             // Satellite info is only output every 100ms
-            data_imu_msg9.vector_nav_gnss1_num_sats = parsed_imu_data.NumSats1;
-            data_imu_msg9.vector_nav_gnss2_num_sats = parsed_imu_data.NumSats2;
-            dlc = sensor_dbc_vector_nav9_pack(can_imubuf, &data_imu_msg9, 8);
+            can_imubuf[0] = parsed_imu_data.NumSats1;
+            can_imubuf[1] = parsed_imu_data.NumSats2;
+            *((uint16_t*)(can_imubuf+2)) = parsed_imu_data.InsStatus;
             WAIT_TX(CAN_SENSOR);
             CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV9_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
         }
@@ -190,7 +189,9 @@ bool SSDB_rear_init() {
     for (i=0; i < 100000; i++);
     uprintf(USART3, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
     for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,76,2,4,7C,0600,0018,0002,0012,0018*01\n");
+    // [] indicates a group is enabled
+    // common, time, [IMU], [GNSS], [attitude], [INS], [GNSS2]
+    uprintf(USART3, "$VNWRG,76,2,4,7C,0600,0018,0002,000B,0018*73\n");
     for (i=0; i < 100000; i++);
     uprintf(USART3, "$VNWNV*57\n");
     for (i=0; i < 100000; i++);
