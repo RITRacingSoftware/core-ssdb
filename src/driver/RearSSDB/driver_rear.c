@@ -4,6 +4,7 @@
   */
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "driver_rear.h"
 #include "CAN/driver_can.h"
@@ -68,6 +69,26 @@ static uint8_t dlc;
 #define WAIT_TX(can) while ((can->PSR & 0x18) == 0x18)
 
 uint8_t msg_counter = 0;
+
+void core_boot_external_enter() {
+    // Disable asynchronous output
+    uprintf(SSDB_REAR_VECTORNAV_USART, "$VNASY,0*4F\n");
+    // Read all remaining data
+    core_USART_receive(SSDB_REAR_VECTORNAV_USART, NULL, 0, 100000);
+}
+
+void core_boot_external_exit() {
+
+}
+
+void core_boot_external_read(uint8_t *ptr, uint32_t address, uint32_t length) {
+    memset(ptr, 0, length);
+    core_USART_receive(SSDB_REAR_VECTORNAV_USART, ptr, length, 100000);
+}
+
+void core_boot_external_write(uint8_t *ptr, uint32_t address, uint32_t length) {
+    core_USART_transmit(SSDB_REAR_VECTORNAV_USART, ptr, strnlen(ptr, length));
+}
 
 /**
   * @brief  VectorNAV UART receive timeout callback
@@ -176,26 +197,26 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
   * @retval 0 otherwise
   */
 bool SSDB_rear_init() {
-    uint32_t i;
+    //uint32_t i;
     core_ADC_init(ADC1);
     core_ADC_init(ADC2);
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
-    core_USART_init(USART3, 921600);
-    //core_USART_start_rx(USART3, imubuf, &imubuflen);
-    uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
+    core_USART_init(SSDB_REAR_VECTORNAV_USART, 921600);
+    //core_USART_start_rx(SSDB_REAR_VECTORNAV_USART, imubuf, &imubuflen);
+    /*uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
     for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,57,-0.1278636,0,0.49977039999999995*41\n");
+    uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWRG,57,-0.1278636,0,0.49977039999999995*41\n");
     for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
+    uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
     for (i=0; i < 100000; i++);
     // [] indicates a group is enabled
     // common, time, [IMU], [GNSS], [attitude], [INS], [GNSS2]
-    uprintf(USART3, "$VNWRG,76,2,4,7C,0600,0018,0002,000B,0018*73\n");
+    uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWRG,76,2,4,7C,0600,0018,0002,000B,0018*73\n");
     for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWNV*57\n");
-    for (i=0; i < 100000; i++);
-    core_USART_register_callback(USART3, &SSDB_USART_callback);
+    uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWNV*57\n");
+    for (i=0; i < 100000; i++);*/
+    core_USART_register_callback(SSDB_REAR_VECTORNAV_USART, &SSDB_USART_callback);
     return true;
 }
 

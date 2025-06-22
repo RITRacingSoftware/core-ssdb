@@ -27,7 +27,7 @@
 #define SSDB_ANALOG_INPUT_R_PORT    GPIOB
 #define SSDB_ANALOG_INPUT_R_PIN     GPIO_PIN_14
 
-#define SSDB_FRONT_LOOP_DELAY       10          /**< @brief Front SSDB mainloop delay in ms **/
+#define SSDB_FRONT_LOOP_DELAY       10           /**< @brief Front SSDB mainloop delay in ms **/
 #define SSDB_FRONT_LEFT_PORT        GPIOA
 #define SSDB_FRONT_LEFT_PIN         GPIO_PIN_1
 #define SSDB_FRONT_RIGHT_PORT       GPIOB
@@ -42,6 +42,8 @@
 #define SSDB_REAR_LEFT_PIN          GPIO_PIN_3
 #define SSDB_REAR_RIGHT_PORT        GPIOA
 #define SSDB_REAR_RIGHT_PIN         GPIO_PIN_7
+
+#define SSDB_REAR_VECTORNAV_USART   USART3
 
 
 #endif
