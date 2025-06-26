@@ -15,6 +15,7 @@
 #include "clock.h"
 #include "gpio.h"
 #include "boot.h"
+#include "timestamp.h"
 #include "error_handler.h"
 #include "sensor_dbc.h"
 
@@ -60,13 +61,13 @@ int main(void) {
 
     if (!core_clock_init()) error_handler();
     if (!CAN_init()) error_handler();
-    core_boot_init();
 #ifdef TARGET_REAR
     if (!SSDB_rear_init()) error_handler();
 #endif
 #ifdef TARGET_FRONT
     if (!SSDB_front_init()) error_handler();
 #endif
+    core_boot_init();
 
     int err = xTaskCreate(heartbeat_task, "heartbeat", 1000, NULL, 4, NULL);
     if (err != pdPASS) {

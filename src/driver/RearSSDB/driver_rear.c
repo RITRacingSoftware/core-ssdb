@@ -12,6 +12,7 @@
 #include "ssdb_config.h"
 #include "adc.h"
 #include "usart.h"
+#include "timestamp.h"
 
 #include "sensor_dbc.h"
 #include "main_dbc.h"
@@ -202,6 +203,7 @@ bool SSDB_rear_init() {
     core_ADC_init(ADC2);
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
+    core_timestamp_init();
     core_USART_init(SSDB_REAR_VECTORNAV_USART, 921600);
     //core_USART_start_rx(SSDB_REAR_VECTORNAV_USART, imubuf, &imubuflen);
     /*uprintf(SSDB_REAR_VECTORNAV_USART, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
