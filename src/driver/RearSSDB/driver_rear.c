@@ -208,5 +208,5 @@ void SSDB_rear_collect_sensors() {
     core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_suspension.ssdb_suspension_rl));
     core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr));
     dlc = sensor_dbc_ssdb_suspension_rear_pack((uint8_t*)(&can_data), &data_suspension, 8);
-    CAN_sensor_transmit(MAIN_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
+    CAN_main_transmit(MAIN_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
 }
