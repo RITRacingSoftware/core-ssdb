@@ -100,7 +100,7 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         dlc = main_dbc_ssdb_vector_nav6_pack(can_imubuf, &data_imu_velocity, 8);
         WAIT_TX(CAN_MAIN);
         CAN_main_transmit(MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        
+/*        
         // X and Y accel to sensor bus
         data_imu_msg0.vector_nav_accel_x = parsed_imu_data.AccelX;
         data_imu_msg0.vector_nav_accel_y = parsed_imu_data.AccelY;
@@ -151,7 +151,7 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         data_imu_msg8.vector_nav_ypr_r = parsed_imu_data.YprR;
         dlc = sensor_dbc_vector_nav8_pack(can_imubuf, &data_imu_msg8, 8);
         WAIT_TX(CAN_SENSOR);
-        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV8_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        // CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV8_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
 
         if (msg_counter == 0) {
             // Satellite info is only output every 100ms
@@ -163,6 +163,8 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         }
         msg_counter++;
         if (msg_counter >= 10) msg_counter = 0;
+
+*/
 
         /*dlc = sensor_dbc_vector_nav_pack(&can_imubuf, &data_imu, 64);
         CAN_sensor_transmit_extended(SENSOR_DBC_VECTOR_NAV_FRAME_ID, dlc, &can_imubuf);*/
@@ -206,5 +208,5 @@ void SSDB_rear_collect_sensors() {
     core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_suspension.ssdb_suspension_rl));
     core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr));
     dlc = sensor_dbc_ssdb_suspension_rear_pack((uint8_t*)(&can_data), &data_suspension, 8);
-    CAN_sensor_transmit(SENSOR_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
+    CAN_sensor_transmit(MAIN_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
 }

@@ -29,7 +29,7 @@ void heartbeat_task(void *pvParameters) {
     (void) pvParameters;
     while(true) {
         core_GPIO_toggle_heartbeat();
-        vTaskDelay(300 * portTICK_PERIOD_MS);
+        vTaskDelay(100 * portTICK_PERIOD_MS);
     }
 }
 

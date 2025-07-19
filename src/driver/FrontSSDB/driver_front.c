@@ -39,7 +39,7 @@ void SSDB_front_collect_sensors() {
     core_ADC_read_channel(SSDB_FRONT_LEFT_PORT, SSDB_FRONT_LEFT_PIN, &(data_suspension.ssdb_suspension_fl));
     core_ADC_read_channel(SSDB_FRONT_RIGHT_PORT, SSDB_FRONT_RIGHT_PIN, &(data_suspension.ssdb_suspension_fr));
     dlc = sensor_dbc_ssdb_suspension_front_pack((uint8_t*)(&can_data), &data_suspension, 8);
-    CAN_sensor_transmit(SENSOR_DBC_SSDB_SUSPENSION_FRONT_FRAME_ID, dlc, can_data);
+    CAN_sensor_transmit(MAIN_DBC_SSDB_SUSPENSION_FRONT_FRAME_ID, dlc, can_data);
     
     core_ADC_read_channel(SSDB_FRONT_BRAKE_PORT, SSDB_FRONT_BRAKE_PIN, &(data_front.ssdb_brake_pressure_front_raw));
     core_ADC_read_channel(SSDB_FRONT_STEERING_PORT, SSDB_FRONT_STEERING_PIN, &(data_front.ssdb_steering_angle_raw));
