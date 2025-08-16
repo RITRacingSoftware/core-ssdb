@@ -11,6 +11,7 @@
 #include "ssdb_config.h"
 #include "adc.h"
 #include "usart.h"
+#include "rtt.h"
 
 #include "sensor_dbc.h"
 #include "main_dbc.h"
@@ -50,14 +51,17 @@ static uint8_t __attribute__((aligned(8))) can_imubuf[64];
 //static uint32_t imubuflen = 0;
 static imu_result_t parsed_imu_data;
 //static struct sensor_dbc_vector_nav_t data_imu;
-static struct main_dbc_ssdb_vector_nav6_t data_imu_velocity;
-static struct sensor_dbc_vector_nav0_t data_imu_msg0;
+static struct main_dbc_vector_nav0_t data_imu_msg0;
+static struct main_dbc_vector_nav2_t data_imu_msg2;
+static struct main_dbc_vector_nav6_t data_imu_msg6;
+
+// static struct sensor_dbc_vector_nav0_t data_imu_msg0;
 static struct sensor_dbc_vector_nav1_t data_imu_msg1;
-static struct sensor_dbc_vector_nav2_t data_imu_msg2;
+// static struct sensor_dbc_vector_nav2_t data_imu_msg2;
 static struct sensor_dbc_vector_nav3_t data_imu_msg3;
 static struct sensor_dbc_vector_nav4_t data_imu_msg4;
 static struct sensor_dbc_vector_nav5_t data_imu_msg5;
-static struct sensor_dbc_vector_nav6_t data_imu_msg6;
+// static struct sensor_dbc_vector_nav6_t data_imu_msg6;
 static struct sensor_dbc_vector_nav7_t data_imu_msg7;
 static struct sensor_dbc_vector_nav8_t data_imu_msg8;
 
@@ -79,6 +83,15 @@ uint8_t msg_counter = 0;
   * @param  rxbuflen Number of bytes received
   */
 void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
+
+    /*
+    for (int i = 0; i < rxbuflen; i++)
+    {
+        rprintf("%02x ", rxbuf[i]);
+    }
+    rprintf("\n\n\n");
+    */
+
     uint8_t dlc = 2;
     if (imu_parse(rxbuf, rxbuflen, &parsed_imu_data)) {
         /*data_imu.vector_nav_accel_x = parsed_imu_data.AccelX;
@@ -94,31 +107,31 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         data_imu.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
         data_imu.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;*/
         
-        // Velocity data to main bus
-        data_imu_velocity.vector_nav_vel_body_x = parsed_imu_data.VelBodyX;
-        data_imu_velocity.vector_nav_vel_body_y = parsed_imu_data.VelBodyY;
-        dlc = main_dbc_ssdb_vector_nav6_pack(can_imubuf, &data_imu_velocity, 8);
-        WAIT_TX(CAN_MAIN);
-        CAN_main_transmit(MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        
         // X and Y accel to sensor bus
         data_imu_msg0.vector_nav_accel_x = parsed_imu_data.AccelX;
         data_imu_msg0.vector_nav_accel_y = parsed_imu_data.AccelY;
-        dlc = sensor_dbc_vector_nav0_pack(can_imubuf, &data_imu_msg0, 8);
-        WAIT_TX(CAN_SENSOR);
-        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV0_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        dlc = main_dbc_vector_nav0_pack(can_imubuf, &data_imu_msg0, 8);
+        WAIT_TX(CAN_MAIN);
+        CAN_main_transmit(MAIN_DBC_VECTOR_NAV0_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        // Y and Z rate to main bus
+        data_imu_msg2.vector_nav_angular_rate_y = parsed_imu_data.AngularRateY;
+        data_imu_msg2.vector_nav_angular_rate_z = parsed_imu_data.AngularRateZ;
+        dlc = main_dbc_vector_nav2_pack(can_imubuf, &data_imu_msg2, 8);
+        WAIT_TX(CAN_MAIN);
+        CAN_main_transmit(MAIN_DBC_VECTOR_NAV2_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        // Velocity data to main bus
+        data_imu_msg6.vector_nav_vel_body_x = parsed_imu_data.VelBodyX;
+        data_imu_msg6.vector_nav_vel_body_y = parsed_imu_data.VelBodyY;
+        dlc = main_dbc_vector_nav6_pack(can_imubuf, &data_imu_msg6, 8);
+        WAIT_TX(CAN_MAIN);
+        CAN_main_transmit(MAIN_DBC_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);  
+
         // Z accel and X rate to sensor bus
         data_imu_msg1.vector_nav_accel_z = parsed_imu_data.AccelZ;
         data_imu_msg1.vector_nav_angular_rate_x = parsed_imu_data.AngularRateX;
         dlc = sensor_dbc_vector_nav1_pack(can_imubuf, &data_imu_msg1, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV1_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        // Y and Z rate to sensor bus
-        data_imu_msg2.vector_nav_angular_rate_y = parsed_imu_data.AngularRateY;
-        data_imu_msg2.vector_nav_angular_rate_z = parsed_imu_data.AngularRateZ;
-        dlc = sensor_dbc_vector_nav2_pack(can_imubuf, &data_imu_msg2, 8);
-        WAIT_TX(CAN_SENSOR);
-        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV2_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
         // Latitude to sensor bus
         data_imu_msg3.vector_nav_pos_lla_l = parsed_imu_data.PosLlaL;
         dlc = sensor_dbc_vector_nav3_pack(can_imubuf, &data_imu_msg3, 8);
@@ -134,13 +147,7 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         dlc = sensor_dbc_vector_nav5_pack(can_imubuf, &data_imu_msg5, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV5_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        // Z accel and X rate to sensor bus
-        data_imu_msg6.vector_nav_vel_body_x = parsed_imu_data.VelBodyX;
-        data_imu_msg6.vector_nav_vel_body_y = parsed_imu_data.VelBodyY;
-        dlc = sensor_dbc_vector_nav6_pack(can_imubuf, &data_imu_msg6, 8);
-        WAIT_TX(CAN_SENSOR);
-        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV6_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        // D valocity and Y angle to sensor bus
+        // D velocity and Y angle to sensor bus
         data_imu_msg7.vector_nav_vel_body_z = parsed_imu_data.VelBodyZ;
         data_imu_msg7.vector_nav_ypr_y = parsed_imu_data.YprY;
         dlc = sensor_dbc_vector_nav7_pack(can_imubuf, &data_imu_msg7, 8);
@@ -182,6 +189,7 @@ bool SSDB_rear_init() {
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
     core_USART_init(USART3, 921600);
+/*    
     //core_USART_start_rx(USART3, imubuf, &imubuflen);
     uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
     for (i=0; i < 100000; i++);
@@ -195,6 +203,7 @@ bool SSDB_rear_init() {
     for (i=0; i < 100000; i++);
     uprintf(USART3, "$VNWNV*57\n");
     for (i=0; i < 100000; i++);
+ */   
     core_USART_register_callback(USART3, &SSDB_USART_callback);
     return true;
 }
