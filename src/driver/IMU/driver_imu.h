@@ -6,6 +6,13 @@
 
 #define MEMBER_OFFSET(member) ((uint32_t)(&(((imu_result_t*)0)->member)))
 
+typedef struct imu_time_utc_s {
+    int8_t TimeUtcYear;
+    uint8_t TimeUtcMonth, TimeUtcDay,
+            TimeUtcHour, TimeUtcMinute, TimeUtcSecond;
+    uint16_t TimeUtcFracSec;
+} imu_time_utc_t;
+
 typedef struct imu_result_s {
     // IMU data
     float UncompMagX, UncompMagY, UncompMagZ,
@@ -33,12 +40,9 @@ typedef struct imu_result_s {
           VelU;
     // time data
     uint64_t TimeStartup, TimeGps, GpsTow;
+    imu_time_utc_t TimeUtc;
     uint16_t GpsWeek;
     uint64_t TimeSyncIn, TimeGpsPps;
-    int8_t TimeUtcYear;
-    uint8_t TimeUtcMonth, TimeUtcDay,
-            TimeUtcHour, TimeUtcMinute, TimeUtcSecond;
-    uint16_t TimeUtcFracSec;
     uint32_t SyncInCnt, SyncOutCnt;
     uint8_t TimeStatus;
     // GNSS1 data

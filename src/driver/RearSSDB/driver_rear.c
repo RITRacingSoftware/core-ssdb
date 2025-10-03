@@ -4,6 +4,7 @@
   */
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "driver_rear.h"
 #include "CAN/driver_can.h"
@@ -64,6 +65,7 @@ static struct sensor_dbc_vector_nav5_t data_imu_msg5;
 // static struct sensor_dbc_vector_nav6_t data_imu_msg6;
 static struct sensor_dbc_vector_nav7_t data_imu_msg7;
 static struct sensor_dbc_vector_nav8_t data_imu_msg8;
+static struct sensor_dbc_vector_nav10_t data_imu_msg10;
 
 static struct sensor_dbc_ssdb_suspension_rear_t data_suspension;
 static uint64_t can_data;
@@ -107,7 +109,7 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         data_imu.vector_nav_vel_ned_e = parsed_imu_data.VelNedE;
         data_imu.vector_nav_vel_ned_d = parsed_imu_data.VelNedD;*/
         
-        // X and Y accel to sensor bus
+        // X and Y accel to main bus
         data_imu_msg0.vector_nav_accel_x = parsed_imu_data.AccelX;
         data_imu_msg0.vector_nav_accel_y = parsed_imu_data.AccelY;
         dlc = main_dbc_vector_nav0_pack(can_imubuf, &data_imu_msg0, 8);
@@ -147,7 +149,7 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         dlc = sensor_dbc_vector_nav5_pack(can_imubuf, &data_imu_msg5, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV5_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
-        // D velocity and Y angle to sensor bus
+        // Z velocity and Y angle to sensor bus
         data_imu_msg7.vector_nav_vel_body_z = parsed_imu_data.VelBodyZ;
         data_imu_msg7.vector_nav_ypr_y = parsed_imu_data.YprY;
         dlc = sensor_dbc_vector_nav7_pack(can_imubuf, &data_imu_msg7, 8);
@@ -159,6 +161,16 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
         dlc = sensor_dbc_vector_nav8_pack(can_imubuf, &data_imu_msg8, 8);
         WAIT_TX(CAN_SENSOR);
         CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV8_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
+        // Body slip angle to sensor bus
+        if (parsed_imu_data.VelBodyX == 0 && parsed_imu_data.VelBodyY == 0) {
+            data_imu_msg10.vector_nav_body_slip = 0;
+        } else {
+            data_imu_msg10.vector_nav_body_slip = atan2f(parsed_imu_data.VelBodyY, parsed_imu_data.VelBodyX);
+        }
+        data_imu_msg8.vector_nav_ypr_r = parsed_imu_data.YprR;
+        dlc = sensor_dbc_vector_nav10_pack(can_imubuf, &data_imu_msg8, 8);
+        WAIT_TX(CAN_SENSOR);
+        CAN_sensor_transmit(SENSOR_DBC_VECTOR_NAV10_FRAME_ID, dlc, ((uint64_t*)&can_imubuf)[0]);
 
         if (msg_counter == 0) {
             // Satellite info is only output every 100ms
@@ -189,21 +201,22 @@ bool SSDB_rear_init() {
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
     core_USART_init(USART3, 921600);
-/*    
     //core_USART_start_rx(USART3, imubuf, &imubuflen);
-    uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
-    for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,57,-0.1278636,0,0.49977039999999995*41\n");
-    for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
-    for (i=0; i < 100000; i++);
+    
+    //uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
+    //for (i=0; i < 100000; i++);
+    //uprintf(USART3, "$VNWRG,57,-0.1278636,0,0.49977039999999995*41\n");
+    //for (i=0; i < 100000; i++);
+    //uprintf(USART3, "$VNWRG,93,1.5960598,00.000,-0.31562039999999997,0.0127,0.0127,0.0127*54\n");
+    //for (i=0; i < 100000; i++);
     // [] indicates a group is enabled
-    // common, time, [IMU], [GNSS], [attitude], [INS], [GNSS2]
-    uprintf(USART3, "$VNWRG,76,2,4,7C,0600,0018,0002,000B,0018*73\n");
-    for (i=0; i < 100000; i++);
-    uprintf(USART3, "$VNWNV*57\n");
-    for (i=0; i < 100000; i++);
- */   
+
+    // common, [time], [IMU], [GNSS], [attitude], [INS], [GNSS2]
+    //uprintf(USART3, "$VNWRG,76,2,4,7E,0240,0600,0018,0002,000B,0018*73\n");
+    //for (i=0; i < 100000; i++);
+    //uprintf(USART3, "$VNWNV*57\n");
+    //for (i=0; i < 100000; i++);
+
     core_USART_register_callback(USART3, &SSDB_USART_callback);
     return true;
 }

@@ -160,7 +160,7 @@
   * be equal to the number of entries in imu_offsets and imu_lengths
   * corresponding to that group.
   */
-static const uint32_t imu_group_sizes[] = {15, 0, 12, 16, 9, 11, 0};
+static const uint32_t imu_group_sizes[] = {15, 10, 12, 16, 9, 11, 0};
 
 /**
   * Offset of each supported type in the imu_result_t struct.
@@ -169,6 +169,7 @@ static const uint32_t imu_offsets[] = {
     // common
     MEMBER_OFFSET(TimeStartup), MEMBER_OFFSET(TimeGps), MEMBER_OFFSET(TimeSyncIn), MEMBER_OFFSET(YprY), 0, MEMBER_OFFSET(AngularRateX), MEMBER_OFFSET(PosLlaL), MEMBER_OFFSET(VelNedN), MEMBER_OFFSET(AccelX), 0, 0, 0, 0, 0, 0,
     // time
+    MEMBER_OFFSET(TimeStartup), MEMBER_OFFSET(TimeGps), MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(TimeSyncIn), MEMBER_OFFSET(TimeGpsPps), MEMBER_OFFSET(TimeUtc), MEMBER_OFFSET(SyncInCnt), MEMBER_OFFSET(SyncOutCnt), MEMBER_OFFSET(TimeStatus),
     // imu
     0, MEMBER_OFFSET(UncompMagX), MEMBER_OFFSET(UncompAccelX), MEMBER_OFFSET(UncompGyroX), MEMBER_OFFSET(Temperature), MEMBER_OFFSET(Pressure), MEMBER_OFFSET(DeltaThetaT), MEMBER_OFFSET(DeltaVelX), MEMBER_OFFSET(MagX), MEMBER_OFFSET(AccelX), MEMBER_OFFSET(AngularRateX), MEMBER_OFFSET(SensSat),
     // gnss
@@ -189,6 +190,7 @@ static const uint32_t imu_lengths[] = {
     // common
     8, 8, 8, 12, 16, 12, 24, 12, 12, 24, 20, 28, 2, 4, 8,
     // time
+    8, 8, 8, 2, 8, 8, 8, 4, 4, 1,
     // imu
     0, 12, 12, 12, 4, 4, 16, 12, 12, 12, 12, 2,
     // gnss
