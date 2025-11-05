@@ -74,6 +74,10 @@ static uint8_t dlc;
 #define WAIT_TX(can) while ((can->PSR & 0x18) == 0x18)
 
 uint8_t msg_counter = 0;
+// vn_setup == 0: VectorNAV has not sent anything
+// vn_setup == 1: VectorNAV has sent its first message and is awaiting config
+// vn_setup == 2: VectorNAV is configured and data is being sent over CAN
+uint8_t vn_setup = 0;
 
 /**
   * @brief  VectorNAV UART receive timeout callback
@@ -95,7 +99,12 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
     */
 
     uint8_t dlc = 2;
-    if (imu_parse(rxbuf, rxbuflen, &parsed_imu_data)) {
+    if (rxbuf[0] == '$') {
+        rxbuf[rxbuflen+1] = 0;
+        rprintf("Received from VN: %s\n", rxbuf);
+    } else if (vn_setup < 2) { 
+        vn_setup = 1;
+    } else if (imu_parse(rxbuf, rxbuflen, &parsed_imu_data)) {
         /*data_imu.vector_nav_accel_x = parsed_imu_data.AccelX;
         data_imu.vector_nav_accel_y = parsed_imu_data.AccelY;
         data_imu.vector_nav_accel_z = parsed_imu_data.AccelZ;
@@ -201,6 +210,7 @@ bool SSDB_rear_init() {
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
     core_USART_init(USART3, 921600);
+    core_USART_register_callback(USART3, &SSDB_USART_callback);
     //core_USART_start_rx(USART3, imubuf, &imubuflen);
     
     //uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
@@ -212,12 +222,19 @@ bool SSDB_rear_init() {
     // [] indicates a group is enabled
 
     // common, [time], [IMU], [GNSS], [attitude], [INS], [GNSS2]
-    //uprintf(USART3, "$VNWRG,76,2,4,7E,0240,0600,0018,0002,000B,0018*73\n");
+
+    //uprintf(USART3, "$VNASY,0*4F\n");
     //for (i=0; i < 100000; i++);
+    //uprintf(USART3, "$VNRRG,75*71\n");
+    //for (i=0; i < 100000; i++);
+    /*uprintf(USART3, "$VNRRG,76*XX\n");
+    for (i=0; i < 100000; i++);
+    uprintf(USART3, "$VNRRG,77*XX\n");
+    for (i=0; i < 100000; i++);*/
+    rprintf("Initialized VectorNAV\n");
     //uprintf(USART3, "$VNWNV*57\n");
     //for (i=0; i < 100000; i++);
 
-    core_USART_register_callback(USART3, &SSDB_USART_callback);
     return true;
 }
 
@@ -229,4 +246,9 @@ void SSDB_rear_collect_sensors() {
     core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr));
     dlc = sensor_dbc_ssdb_suspension_rear_pack((uint8_t*)(&can_data), &data_suspension, 8);
     CAN_sensor_transmit(SENSOR_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
+    if (vn_setup == 1) {
+        rprintf("Sending config\n");
+        uprintf(USART3, "$VNWRG,75,2,4,7E,0240,0600,0018,0002,000B,0018*XX\n");
+        vn_setup = 2;
+    }
 }

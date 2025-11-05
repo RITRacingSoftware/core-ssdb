@@ -39,9 +39,9 @@
 
 #define SSDB_REAR_LOOP_DELAY        10          /**< @brief Rear SSDB mainloop delay in ms **/
 #define SSDB_REAR_LEFT_PORT         GPIOA
-#define SSDB_REAR_LEFT_PIN          GPIO_PIN_3
-#define SSDB_REAR_RIGHT_PORT        GPIOA
-#define SSDB_REAR_RIGHT_PIN         GPIO_PIN_7
+#define SSDB_REAR_LEFT_PIN          GPIO_PIN_1
+#define SSDB_REAR_RIGHT_PORT        GPIOB
+#define SSDB_REAR_RIGHT_PIN         GPIO_PIN_14
 
 
 #endif
