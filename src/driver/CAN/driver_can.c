@@ -6,6 +6,7 @@
 #include "can.h"
 #include "driver_can.h"
 #include "ssdb_config.h"
+#include "rtt.h"
 #include <stdint.h>
 #include <stdbool.h>
 

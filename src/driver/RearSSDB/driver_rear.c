@@ -12,6 +12,7 @@
 #include "ssdb_config.h"
 #include "adc.h"
 #include "usart.h"
+#include "can.h"
 #include "rtt.h"
 
 #include "sensor_dbc.h"
@@ -67,7 +68,10 @@ static struct sensor_dbc_vector_nav7_t data_imu_msg7;
 static struct sensor_dbc_vector_nav8_t data_imu_msg8;
 static struct sensor_dbc_vector_nav10_t data_imu_msg10;
 
-static struct sensor_dbc_ssdb_suspension_rear_t data_suspension;
+static struct sensor_dbc_ssdb_temps_rear_raw_d data_temp_raw;
+static struct sensor_dbc_ssdb_temps_rear_d data_temp;
+
+static struct sensor_dbc_ssdb_suspension_rear_d data_suspension;
 static uint64_t can_data;
 static uint8_t dlc;
 
@@ -78,6 +82,10 @@ uint8_t msg_counter = 0;
 // vn_setup == 1: VectorNAV has sent its first message and is awaiting config
 // vn_setup == 2: VectorNAV is configured and data is being sent over CAN
 uint8_t vn_setup = 0;
+
+uint8_t temp_counter = 0;
+
+static uint32_t num_msg = 0;
 
 /**
   * @brief  VectorNAV UART receive timeout callback
@@ -97,6 +105,8 @@ void SSDB_USART_callback(uint8_t *rxbuf, uint32_t rxbuflen) {
     }
     rprintf("\n\n\n");
     */
+
+    num_msg++;
 
     uint8_t dlc = 2;
     if (rxbuf[0] == '$') {
@@ -209,8 +219,13 @@ bool SSDB_rear_init() {
     core_ADC_init(ADC2);
     core_ADC_setup_pin(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, 1);
     core_ADC_setup_pin(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, 1);
-    core_USART_init(USART3, 921600);
-    core_USART_register_callback(USART3, &SSDB_USART_callback);
+    core_ADC_setup_pin(GPIOA, GPIO_PIN_7, 1);       // temp D
+    core_ADC_setup_pin(GPIOA, GPIO_PIN_4, 0);       // temp E
+    core_ADC_setup_pin(GPIOA, GPIO_PIN_5, 0);       // temp F
+    core_ADC_setup_pin(GPIOC, GPIO_PIN_4, 0);       // temp G
+    core_ADC_setup_pin(GPIOB, GPIO_PIN_0, 0);       // temp H
+    //core_USART_init(USART3, 921600);
+    //core_USART_register_callback(USART3, &SSDB_USART_callback);
     //core_USART_start_rx(USART3, imubuf, &imubuflen);
     
     //uprintf(USART3, "$VNWRG,26,-1.0,-0.0,-0.0,-0.0,1.0,-0.0,-0.0,-0.0,-1.0*71\n");
@@ -239,16 +254,57 @@ bool SSDB_rear_init() {
 }
 
 /**
+  * @brief  Convert an ADC value to a temperature using the NTC resistance
+  *         formula
+  * @param  adc Measured ADC value
+  * @param  beta Beta value of the NTC thermistor
+  * @param  ofs Computed as log(R_u/R_0) + beta/T_0, where R_u is the pull-up
+  *         resistance, R_0 is the nominal resistance, and T_0 is the nominal
+  *         temperature.
+  * @return Temperature in degrees Celsius
+  */
+static float convert_temperature(uint16_t adc, float beta, float ofs) {
+    if ((adc > 4091) || (adc < 5)) return 0.0f;
+    return beta/(logf((float)adc/(4096-adc)) + ofs) - 273.15f;
+}
+
+/**
   * @brief  Collect sensor data on the rear SSDB and transmit over CAN
   */
 void SSDB_rear_collect_sensors() {
-    core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_suspension.ssdb_suspension_rl));
-    core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr));
-    dlc = sensor_dbc_ssdb_suspension_rear_pack((uint8_t*)(&can_data), &data_suspension, 8);
+    core_ADC_read_channel(SSDB_REAR_LEFT_PORT, SSDB_REAR_LEFT_PIN, &(data_suspension.ssdb_suspension_rl_raw));
+    core_ADC_read_channel(SSDB_REAR_RIGHT_PORT, SSDB_REAR_RIGHT_PIN, &(data_suspension.ssdb_suspension_rr_raw));
+    data_suspension.ssdb_suspension_rl = 6.9f;
+    data_suspension.ssdb_suspension_rr = 6.9f;
+    dlc = sensor_dbc_ssdb_suspension_rear_full_encode((uint8_t*)(&can_data), &data_suspension, 8);
     CAN_sensor_transmit(SENSOR_DBC_SSDB_SUSPENSION_REAR_FRAME_ID, dlc, can_data);
+    if (temp_counter == 0) {
+        rprintf("Collecting temps, BO %d\n", core_CAN_errors.bus_off);
+        core_ADC_read_channel(GPIOA, GPIO_PIN_7, &(data_temp_raw.ssdb_temp_d_raw));
+        core_ADC_read_channel(GPIOA, GPIO_PIN_4, &(data_temp_raw.ssdb_temp_e_raw));
+        core_ADC_read_channel(GPIOA, GPIO_PIN_5, &(data_temp_raw.ssdb_temp_f_raw));
+        core_ADC_read_channel(GPIOC, GPIO_PIN_4, &(data_temp_raw.ssdb_temp_g_raw));
+        core_ADC_read_channel(GPIOB, GPIO_PIN_0, &(data_temp_raw.ssdb_temp_h_raw));
+        dlc = sensor_dbc_ssdb_temps_rear_raw_full_encode((uint8_t*)(&can_data), &data_temp_raw, 8);
+        WAIT_TX(CAN_SENSOR);
+        CAN_sensor_transmit(SENSOR_DBC_SSDB_TEMPS_REAR_RAW_FRAME_ID, dlc, can_data);
+
+        data_temp.ssdb_temp_d = convert_temperature(data_temp_raw.ssdb_temp_d_raw, 3443.0f, 13.131135f);
+        data_temp.ssdb_temp_e = convert_temperature(data_temp_raw.ssdb_temp_e_raw, 3443.0f, 13.131135f);
+        data_temp.ssdb_temp_f = convert_temperature(data_temp_raw.ssdb_temp_f_raw, 3443.0f, 13.131135f);
+        data_temp.ssdb_temp_g = convert_temperature(data_temp_raw.ssdb_temp_g_raw, 3443.0f, 13.131135f);
+        data_temp.ssdb_temp_h = convert_temperature(data_temp_raw.ssdb_temp_h_raw, 3977.0f, 13.338923f);
+        dlc = sensor_dbc_ssdb_temps_rear_full_encode((uint8_t*)(&can_data), &data_temp, 8);
+        WAIT_TX(CAN_SENSOR);
+        CAN_sensor_transmit(SENSOR_DBC_SSDB_TEMPS_REAR_FRAME_ID, dlc, can_data);
+    }
+    temp_counter++;
+    if (temp_counter >= SSDB_REAR_TEMPERATURE_DIVIDER) temp_counter = 0;
+
     if (vn_setup == 1) {
         rprintf("Sending config\n");
         uprintf(USART3, "$VNWRG,75,2,4,7E,0240,0600,0018,0002,000B,0018*XX\n");
         vn_setup = 2;
     }
+    //CAN_sensor_transmit(502, 8, (uint64_t)vn_setup + (((uint64_t)num_msg) << 32));
 }
